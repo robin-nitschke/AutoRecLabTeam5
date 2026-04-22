@@ -577,14 +577,14 @@ class MinimalAgent:
         return node
 
     async def _summarize(self, user_request: str, node: Node) -> str:
-        """Summarizes the results of a node and returns a human readable report.
+        """Summarizes the results of a node and returns a Markdown report.
 
         Args:
             user_request (str): The original request of the user.
             node (Node): Node to summarize.
 
         Returns:
-            str: A summary/answer to the user request based on the node's code and execution output.
+            str: A Markdown summary based on the node's code and execution output.
         """
         logger.info("Summarizing results...")
 
@@ -605,10 +605,11 @@ class MinimalAgent:
             "Instructions": [
                 "1. Use the code to interpret what the experiment did and what metrics or results are relevant.",
                 "2. Read the output carefully and extract factual findings that answer the user request.",
-                "3. Formulate your response as if chatting directly with the user — clear, concise, and natural.",
-                "4. Do not output any structured formats or metadata (no JSON, tables, etc.) unless the user request explicitly asks for it.",
-                "5. Be confident, factual, and grounded only in the provided information.",
-                "6. If the experiment output is ambiguous or incomplete, mention this explicitly instead of guessing.",
+                "3. Return valid Markdown only (no JSON, no XML, no code fences around the whole response).",
+                "4. Use this structure exactly: '# Experiment Summary', '## User Request', '## What Was Run', '## Key Results', '## Limitations', '## Conclusion'.",
+                "5. In '## Key Results', include a compact Markdown table. If exact values are unavailable, put 'N/A' and explain why.",
+                "6. Keep the summary concise, factual, and grounded only in the provided information.",
+                "7. If the experiment output is ambiguous or incomplete, mention this explicitly instead of guessing.",
             ],
         }
 
@@ -616,7 +617,7 @@ class MinimalAgent:
             await Query(temperature=0.0)
             .with_mcp(self._mcp_docs)
             .with_system(
-                "If you need to explain results or metrics, search for documentation about evaluation metrics and their interpretation. Focus on user-facing explanations."
+                "If you need to explain results or metrics, search for documentation about evaluation metrics and their interpretation. Focus on user-facing explanations. Output must be clean Markdown suitable for saving as summary.md."
             )
             .run(summary_prompt)
         )

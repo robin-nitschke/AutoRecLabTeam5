@@ -215,7 +215,12 @@ class TreeSearch:
         self._interpreter.cleanup_session()
         logger.info(f"Finalizing search with node: {result_node.id}")
         logger.info("Final response:")
-        print(await self._minimal_agent._summarize(self._user_request, result_node))
+        summary = await self._minimal_agent._summarize(self._user_request, result_node)
+        summary_path = self._out_dir / "summary.md"
+        summary_path.write_text(summary, encoding="utf-8")
+        logger.info(f"Wrote markdown summary to: {summary_path}")
+        print(summary)
+        
 
     @property
     def _task_desc(self) -> str:
