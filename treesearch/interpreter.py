@@ -299,8 +299,15 @@ class Interpreter:
         # read all stdout/stderr from child up to the EOF marker
         # waiting until the queue is empty is not enough since
         # the feeder thread in child might still be adding to the queue
+        # After a timeout+cleanup the subprocess is dead and will never send
+        # <|EOF|>, so we use a short get() timeout to break out instead of
+        # blocking forever.
         while not self.result_outq.empty() or not output or output[-1] != "<|EOF|>":
-            output.append(self.result_outq.get())
+            try:
+                output.append(self.result_outq.get(timeout=2))
+            except queue.Empty:
+                output.append("<|EOF|>")
+                break
         output.pop()  # remove the EOF marker
 
         e_cls_name, exc_info, exc_stack = state[1:]
