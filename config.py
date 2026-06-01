@@ -33,7 +33,7 @@ class AgentConfig(BaseSettings):
 
 class Config(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="ARL_", env_nested_delimiter="__", toml_file=CONFIG_PATH
+        env_prefix="ARL_", env_nested_delimiter="__", toml_file=CONFIG_PATH, frozen=False
     )
 
     out_dir: str = "./out"

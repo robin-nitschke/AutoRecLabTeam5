@@ -6,7 +6,7 @@ from treesearch.search import TreeSearch
 from utils.log import _ROOT_LOGGER, attach_file_handler, set_log_level
 from utils.path import mkdir
 from utils.checks import require_executable
-from treesearch.utils.costs_tracker import get_cost_tracker
+from treesearch.utils.costs_tracker import get_cost_tracker, get_model_table
 from utils.statistics_tracker import get_statistics_tracker
 from treesearch.utils.available_datasets import get_datasets_table
 
@@ -33,6 +33,17 @@ async def main():
         datasets_table = get_datasets_table()
         print(datasets_table)
         return
+
+
+    # List available models
+    if args.list_models:
+        models_table = get_model_table()
+        print(models_table)
+        return
+    
+    # Set model in config if provided as argument
+    if args.model is not None:
+        config.agent.code = config.agent.code.model_copy(update={"model": args.model})
 
 
     # Prepare to run AutoRecLab
@@ -95,6 +106,8 @@ def get_args():
     parser.add_argument("--prompt-file", type=str, default=None)
     parser.add_argument("--prompt-no-log", action="store_true")
     parser.add_argument("--list-datasets", action="store_true")
+    parser.add_argument("--list-models", action="store_true")
+    parser.add_argument("--model", type=str, default=None)
 
     return parser.parse_args()
 

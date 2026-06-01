@@ -152,7 +152,7 @@ uv run main.py --prompt "Analyze the signal and generate a report"
 uv run main.py --prompt-file ./my-prompt.txt
 ```
 
-**Don't log entered prompt in /entered_prompt.txt**
+**Don't log entered prompt in /entered_prompt.txt:**
 ```bash
 uv run main.py --prompt-no-log
 ```
@@ -162,11 +162,20 @@ uv run main.py --prompt-no-log
 uv run main.py --init
 ```
 
-**List all available datasets**
+**List all available datasets:**
 ```bash
 uv run main.py --list-datasets
 ```
 
+**List all available models:**
+```bash
+uv run main.py --list-models
+```
+
+**Set model:**
+```bash
+uv run main.py --model "gpt-4o"
+```
 
 ## Embeddings / documentation index
 

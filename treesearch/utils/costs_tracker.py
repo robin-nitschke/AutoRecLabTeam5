@@ -10,6 +10,26 @@ def load_pricing():
         data = json.load(f)
     return data["models"]
 
+def get_model_table():
+    prices = load_pricing()
+    
+    headers = ["Model Name", "Input Cost (per 1M tokens)", "Output Cost (per 1M tokens)"]
+    rows = [(p["model"], f"${p['input']}", f"${p['output']}") for p in prices]
+    
+    col_widths = [
+        max(len(headers[i]), max(len(row[i]) for row in rows))
+        for i in range(len(headers))
+    ]
+    
+    def fmt_row(row):
+        return "  ".join(cell.ljust(col_widths[i]) for i, cell in enumerate(row))
+    
+    separator = "  ".join("-" * w for w in col_widths)
+    
+    lines = [fmt_row(headers), separator] + [fmt_row(row) for row in rows]
+    return "\n".join(lines)
+
+
 prices = load_pricing()
 
 # Base class for tracking token usage
