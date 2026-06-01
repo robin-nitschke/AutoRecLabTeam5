@@ -1,0 +1,2 @@
+Train ImplicitMF (ALS) on MovieLens100K (u.data in the working directory) using the default LensKit 0.14.4 hyperparameters. Apply 5-core filtering and treat ratings > 3 as implicit interactions. Use 3 different random seeds for 80/20 user-based holdout splits. Use batch.recommend for all users at once. Report mean and standard deviation of nDCG@10 and Precision@10 across seeds. Save results as a CSV file.
+!start

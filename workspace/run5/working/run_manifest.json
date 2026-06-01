@@ -1,0 +1,31 @@
+{
+  "seeds": [
+    1,
+    7,
+    21,
+    42,
+    84
+  ],
+  "ks": [
+    1,
+    5,
+    10
+  ],
+  "datasets": {
+    "ml100k": {
+      "n_interactions": 54413,
+      "n_users": 938,
+      "n_items": 1008
+    },
+    "amazon_vg": {
+      "n_interactions": 533133,
+      "n_users": 63383,
+      "n_items": 19020
+    },
+    "lastfm": {
+      "n_interactions": 52551,
+      "n_users": 1090,
+      "n_items": 3646
+    }
+  }
+}

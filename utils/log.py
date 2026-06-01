@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 from rich.logging import RichHandler
 
@@ -10,8 +11,10 @@ console_handler = RichHandler()
 console_handler.setLevel(logging.INFO)
 _ROOT_LOGGER.addHandler(console_handler)
 
-# HACK:
-file_handler = logging.FileHandler("out/debug.log")
+# Absolute path so worker processes (which chdir into workspace/) can still find it.
+_LOG_PATH = Path(__file__).resolve().parent.parent / "out" / "debug.log"
+_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+file_handler = logging.FileHandler(str(_LOG_PATH))
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(
     logging.Formatter(

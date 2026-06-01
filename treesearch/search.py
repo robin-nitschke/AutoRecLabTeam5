@@ -41,9 +41,13 @@ class TreeSearch:
 
     @property
     def best_good_node(self):
-        good_nodes = self.good_nodes
-        good_nodes.sort(key=lambda n: n.score.score, reverse=True)
-        return good_nodes[0]
+        # Fall back to the highest-scoring node overall if no node was marked
+        # satisfactory — otherwise the final summary crashes with IndexError.
+        candidates = self.good_nodes or self.all_nodes
+        if not candidates:
+            return None
+        candidates.sort(key=lambda n: n.score.score, reverse=True)
+        return candidates[0]
 
     def select_next_node(self) -> Node:
         if (
@@ -94,6 +98,9 @@ class TreeSearch:
         logger.warning("Found no satisfactory node; Using best node instead...")
 
         best_node = self.best_good_node
+        if best_node is None:
+            logger.error("No nodes were produced — cannot print experiment summary.")
+            return
         self.print_experiment_summary(best_node)
 
     def exec_node(self, node: Node) -> Node:

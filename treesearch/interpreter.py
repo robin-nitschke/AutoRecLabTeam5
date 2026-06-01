@@ -283,11 +283,18 @@ class Interpreter:
                     # [TODO] handle this in a better way
                     assert reset_session, "Timeout ocurred in interactive session"
 
-                    # send interrupt to child
-                    os.kill(self.process.pid, signal.SIGINT)  # type: ignore
+                    # Send interrupt to child. Windows doesn't support
+                    # POSIX-style SIGINT delivery to processes via os.kill,
+                    # so fall straight through to terminate() there.
+                    if sys.platform != "win32":
+                        try:
+                            os.kill(self.process.pid, signal.SIGINT)  # type: ignore
+                        except (ProcessLookupError, PermissionError, OSError) as e:
+                            logger.warning(f"Could not send SIGINT to child: {e}")
                     child_in_overtime = True
-                    # terminate if we're overtime by more than a minute
-                    if running_time > self.timeout + 60:
+                    # On Windows skip the SIGINT grace window and force-kill.
+                    grace = 0 if sys.platform == "win32" else 60
+                    if running_time > self.timeout + grace:
                         logger.warning("Child failed to terminate, killing it..")
                         self.cleanup_session()
 
@@ -299,8 +306,15 @@ class Interpreter:
         # read all stdout/stderr from child up to the EOF marker
         # waiting until the queue is empty is not enough since
         # the feeder thread in child might still be adding to the queue
+        # After a timeout+cleanup the subprocess is dead and will never send
+        # <|EOF|>, so we use a short get() timeout to break out instead of
+        # blocking forever (F12 fix).
         while not self.result_outq.empty() or not output or output[-1] != "<|EOF|>":
-            output.append(self.result_outq.get())
+            try:
+                output.append(self.result_outq.get(timeout=2))
+            except queue.Empty:
+                output.append("<|EOF|>")
+                break
         output.pop()  # remove the EOF marker
 
         e_cls_name, exc_info, exc_stack = state[1:]

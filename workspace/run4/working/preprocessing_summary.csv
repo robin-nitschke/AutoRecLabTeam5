@@ -1,0 +1,4 @@
+dataset,raw_rows,after_threshold_rows,after_dedup_rows,dropped_users_lt2_pre_split,final_interactions,final_users,final_items
+ml100k,100000,55375,55375,0,54413,938,1008
+amazon_videogames,231780,231780,231780,0,231780,24303,10672
+lastfm,186479,186479,71064,252,52551,1090,3646
