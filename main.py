@@ -22,33 +22,54 @@ async def main():
     config = get_config()
     out_dir = mkdir(config.out_dir)
     args = get_args()
+
+    #Init workspace
     if args.init:
         mkdir(out_dir / "workspace")
         return
 
-    attach_file_handler(out_dir)
 
+    # Prepare to run AutoRecLab
+    attach_file_handler(out_dir)
     cost_tracker.set_out_dir(out_dir)
     statistics_tracker.set_out_dir(out_dir)
-    
     require_executable("dot")
 
-    user_req_lines: list[str] = []
-    print('Enter you request, write "!start" to start:')
-    while True:
-        line = input("> ")
-        if line.lower().strip().startswith("!start"):
-            break
-        user_req_lines.append(line)
 
-    user_request = "\n".join(user_req_lines)
+    # Get user request
+    user_request = None
+
+    if args.prompt is not None:
+        user_request = args.prompt
+
+    elif args.prompt_file is not None:
+        with open(args.prompt_file, "r", encoding="utf-8") as f:
+            user_request = f.read().strip()
+
+    else:
+        user_req_lines: list[str] = []
+        print('Enter you request, write "!start" to start:')
+        while True:
+            line = input("> ")
+            if line.lower().strip().startswith("!start"):
+                break
+            user_req_lines.append(line)
+
+        user_request = "\n".join(user_req_lines)
+
+    if user_request is None or user_request.strip() == "":
+        logger.error("No request provided. Please provide a prompt using --prompt or --prompt-file, or type it manually.")
+        return
     
-    logger.info("Starting AutoRecLab...")
 
+    # Start AutoRecLab
+    logger.info("Starting AutoRecLab...")
     ts = TreeSearch(user_request, config=config)
     await ts._async_init()
     await ts.run()
 
+
+    # Summarize results
     cost_tracker.saveSummarized()
     statistics_tracker.summarize_statistics()
 
@@ -56,6 +77,8 @@ async def main():
 def get_args():
     parser = ArgumentParser("AutoRecLab")
     parser.add_argument("--init", action="store_true")
+    parser.add_argument("--prompt", type=str, default=None)
+    parser.add_argument("--prompt-file", type=str, default=None)
 
     return parser.parse_args()
 

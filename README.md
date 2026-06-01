@@ -139,6 +139,25 @@ At runtime, AutoRecLab will:
 4. debug/improve candidates iteratively,
 5. stop when iteration budget/satisfaction criteria are reached.
 
+
+## CLI Usage
+
+**Inline prompt:**
+```bash
+uv run main.py --prompt "Analyze the signal and generate a report"
+```
+
+**Load prompt from an file:**
+```bash
+uv run main.py --prompt-file ./my-prompt.txt
+```
+
+**Initialize workspace:**
+```bash
+uv run main.py --init
+```
+
+
 ## Embeddings / documentation index
 
 AutoRecLab uses FAISS vector stores in `ragEmbeddings/` for docs-aware coding.
