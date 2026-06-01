@@ -1,0 +1,20 @@
+{
+  "n_results": 45,
+  "datasets": [
+    "MovieLens100K",
+    "AmazonVideoGames",
+    "LastFM"
+  ],
+  "algorithms": [
+    "ALS",
+    "ItemKNN",
+    "Pop"
+  ],
+  "seeds": [
+    11,
+    22,
+    33,
+    44,
+    55
+  ]
+}
