@@ -8,6 +8,7 @@ from utils.path import mkdir
 from utils.checks import require_executable
 from treesearch.utils.costs_tracker import get_cost_tracker
 from utils.statistics_tracker import get_statistics_tracker
+from treesearch.utils.available_datasets import get_datasets_table
 
 logger = _ROOT_LOGGER.getChild("main")
 cost_tracker = get_cost_tracker()
@@ -24,6 +25,13 @@ async def main():
     #Init workspace
     if args.init:
         mkdir(out_dir / "workspace")
+        return
+
+
+    # List available datasets
+    if args.list_datasets:
+        datasets_table = get_datasets_table()
+        print(datasets_table)
         return
 
 
@@ -86,6 +94,7 @@ def get_args():
     parser.add_argument("--prompt", type=str, default=None)
     parser.add_argument("--prompt-file", type=str, default=None)
     parser.add_argument("--prompt-no-log", action="store_true")
+    parser.add_argument("--list-datasets", action="store_true")
 
     return parser.parse_args()
 

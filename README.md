@@ -162,6 +162,11 @@ uv run main.py --prompt-no-log
 uv run main.py --init
 ```
 
+**List all available datasets**
+```bash
+uv run main.py --list-datasets
+```
+
 
 ## Embeddings / documentation index
 
