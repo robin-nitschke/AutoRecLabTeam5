@@ -1,14 +1,12 @@
 import asyncio
 import os
 from argparse import ArgumentParser
-
 from config import get_config
 from treesearch.search import TreeSearch
 from utils.log import _ROOT_LOGGER, attach_file_handler, set_log_level
 from utils.path import mkdir
 from utils.checks import require_executable
 from treesearch.utils.costs_tracker import get_cost_tracker
-import asyncio
 from utils.statistics_tracker import get_statistics_tracker
 
 logger = _ROOT_LOGGER.getChild("main")
@@ -62,8 +60,16 @@ async def main():
         return
     
 
+    # Log the user request
+    if not args.prompt_no_log:
+        prompt_file = out_dir / "entered_prompt.txt"
+        with open(prompt_file, "w", encoding="utf-8") as f:
+            f.write(user_request)
+
+
     # Start AutoRecLab
     logger.info("Starting AutoRecLab...")
+    logger.debug(f"User request:\n{user_request}")
     ts = TreeSearch(user_request, config=config)
     await ts._async_init()
     await ts.run()
@@ -79,6 +85,7 @@ def get_args():
     parser.add_argument("--init", action="store_true")
     parser.add_argument("--prompt", type=str, default=None)
     parser.add_argument("--prompt-file", type=str, default=None)
+    parser.add_argument("--prompt-no-log", action="store_true")
 
     return parser.parse_args()
 

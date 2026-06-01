@@ -152,6 +152,11 @@ uv run main.py --prompt "Analyze the signal and generate a report"
 uv run main.py --prompt-file ./my-prompt.txt
 ```
 
+**Don't log entered prompt in /entered_prompt.txt**
+```bash
+uv run main.py --prompt-no-log
+```
+
 **Initialize workspace:**
 ```bash
 uv run main.py --init
