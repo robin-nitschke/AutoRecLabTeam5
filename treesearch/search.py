@@ -209,7 +209,7 @@ class TreeSearch:
             logger.info("Keeping only relevant files.")
             keep = []
             for item in generated_files:
-                if item.suffix.lower() in (".png", ".jpeg", ".jpg"):
+                if item.suffix.lower() in (".png", ".jpeg", ".jpg", ".json", ".csv"):
                     logger.debug(f"Keeping {item.name}")
                     keep.append(item)
                 else:
