@@ -1,6 +1,8 @@
 import asyncio
 import os
 from argparse import ArgumentParser
+from datetime import datetime
+from pathlib import Path
 from config import get_config
 from treesearch.search import TreeSearch
 from utils.log import _ROOT_LOGGER, attach_file_handler, set_log_level
@@ -44,6 +46,13 @@ async def main():
     # Set model in config if provided as argument
     if args.model is not None:
         config.agent.code = config.agent.code.model_copy(update={"model": args.model})
+
+
+    # Isolate this run's outputs in a timestamped subdirectory so artifacts from
+    # different runs are not mixed in the same out/ directory.
+    run_id = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    config = config.model_copy(update={"out_dir": str(Path(config.out_dir) / f"run_{run_id}")})
+    out_dir = mkdir(config.out_dir)
 
 
     # Prepare to run AutoRecLab
