@@ -1,3 +1,36 @@
+# AutoRecLab v1 — Team 5 Fork
+
+This is **Team 5's** fork. Compared to the original (AutoRecLab v1), it adds Windows
+compatibility, small robustness fixes, and the artefacts from our experiment runs. The
+original README follows further below.
+
+## Our Changes
+
+**Bugfixes / Windows compatibility** (in `treesearch/` and `utils/`):
+- `interpreter.py`: `os.kill(SIGINT)` is now only used on non-Windows; on Windows the
+  child process is terminated directly (otherwise `PermissionError`). The output read
+  loop is also guarded with `get(timeout=2)` — this fixes the queue deadlock that made a
+  run hang forever after a timeout.
+- `search.py`: `best_good_node` falls back to all nodes and returns `None` instead of
+  raising an `IndexError` when no node was marked as "good" — so the final summary no
+  longer crashes.
+- `utils/log.py`: absolute path for `out/debug.log` so the worker processes
+  (CWD = `workspace/`) can find the log file.
+- `viz.py`: replaced the Unicode arrow `→` in `print()` with ASCII `->` — otherwise the
+  final `save()` step crashes on Windows cp1252 consoles and `save.pkl` is never written.
+
+**Configuration / dependencies:**
+- Added `matplotlib>=3.7` to `pyproject.toml` (drafts otherwise failed on import).
+- Set the default model in `config.toml` to `gpt-5.4`.
+
+**Experiment artefacts** (checked in, not part of the code):
+- `out/` and `workspace/` contain the results of several runs (runs 1–6):
+  generated code, logs, `save.pkl`, CSVs, and plots.
+- Prompts used: `prompt_run5_paperreplikation.txt` (paper replication, 3 algorithms
+  × 3 datasets × 5 seeds) and `prompt_run6_eigenerprompt.txt` (custom ImplicitMF run).
+
+---
+
 > [!IMPORTANT]
 > **Looking for the latest features?** This branch contains the current stable release aka. **AutoRecLab v1**. 
 > For active development and upcoming changes, please switch to the [`develop`](../../tree/develop) branch.
