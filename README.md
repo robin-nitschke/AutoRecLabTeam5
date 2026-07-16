@@ -1,8 +1,9 @@
-# AutoRecLab v1 — Team 5 Fork
+# AutoRecLab Alpha — Team 5 Fork
 
-This is **Team 5's** fork. Compared to the original (AutoRecLab v1), it adds Windows
-compatibility, small robustness fixes, and the artefacts from our experiment runs. The
-original README follows further below.
+This is **Team 5's** fork. Compared to the original (AutoRecLab Alpha, the initial
+release on the `main` branch, referred to as "v1" in the original README below), it adds
+Windows compatibility, small robustness fixes, and the artefacts from our experiment
+runs. The original README follows further below.
 
 ## Our Changes
 
@@ -24,10 +25,12 @@ original README follows further below.
 - Set the default model in `config.toml` to `gpt-5.4`.
 
 **Experiment artefacts** (checked in, not part of the code):
-- `out/` and `workspace/` contain the results of several runs (runs 1–6):
+- `out/` and `workspace/` contain the results of several runs (runs 1–7):
   generated code, logs, `save.pkl`, CSVs, and plots.
 - Prompts used: `prompt_run5_paperreplikation.txt` (paper replication, 3 algorithms
   × 3 datasets × 5 seeds) and `prompt_run6_eigenerprompt.txt` (custom ImplicitMF run).
+- Run 7 (2026-07-16) is a repetition of run 5 with identical settings and prompt
+  (`prompt_run5_paperreplikation.txt`, `gpt-5.4`, same `config.toml`).
 
 ---
 

@@ -2,144 +2,265 @@ import os
 working_dir = os.path.join(os.getcwd(), 'working')
 os.makedirs(working_dir, exist_ok=True)
 
-import random
+import warnings
+warnings.filterwarnings('ignore')
+
 import numpy as np
 import pandas as pd
-from lenskit.algorithms.als import ImplicitMF
+from scipy import stats
 from lenskit import batch
+from lenskit.algorithms import Recommender
+from lenskit.algorithms.basic import Popular
+from lenskit.algorithms.als import ImplicitMF
+from lenskit.algorithms.item_knn import ItemItem
+
+SEEDS = [1, 7, 21, 42, 84]
+KS = [1, 5, 10]
+MAX_K = max(KS)
+DATASET_KEYS = ['ml100k', 'amazon_videogames', 'lastfm']
 
 experiment_data = {
-    'ml100k_implicitmf': {
-        'metrics': {'train': [], 'val': []},
-        'losses': {'train': [], 'val': []},
-        'predictions': [],
-        'ground_truth': [],
-        'timestamps': []
-    }
+    k: {'metrics': {'train': [], 'val': []}, 'losses': {'train': [], 'val': []}, 'predictions': [], 'ground_truth': []}
+    for k in DATASET_KEYS
 }
 
-def load_data(path='u.data'):
-    df = pd.read_csv(path, sep='\t', header=None, names=['user', 'item', 'rating', 'timestamp'])
-    return df.loc[df['rating'] > 3, ['user', 'item']].reset_index(drop=True)
 
-def iterative_kcore(df, k=5):
-    cur = df[['user', 'item']].copy()
+def require_file(path):
+    if not os.path.exists(path):
+        raise FileNotFoundError(f'Missing required file: {path}')
+
+
+def k_core_filter(df, user_col='user', item_col='item', min_k=5):
+    df = df[[user_col, item_col]].dropna().drop_duplicates().copy()
+    if df.empty:
+        raise ValueError('Input interactions are empty before k-core filtering.')
     while True:
-        uc = cur.groupby('user').size()
-        ic = cur.groupby('item').size()
-        nxt = cur[cur['user'].isin(uc[uc >= k].index) & cur['item'].isin(ic[ic >= k].index)].copy()
-        if len(nxt) == len(cur):
-            return nxt.reset_index(drop=True)
-        cur = nxt
+        uc = df[user_col].value_counts()
+        ic = df[item_col].value_counts()
+        keep_u = uc[uc >= min_k].index
+        keep_i = ic[ic >= min_k].index
+        new_df = df[df[user_col].isin(keep_u) & df[item_col].isin(keep_i)]
+        if len(new_df) == len(df):
+            break
+        df = new_df
+        if df.empty:
+            raise ValueError('Dataset became empty during 5-core filtering.')
+    return df.reset_index(drop=True)
 
-def make_holdout(df, seed, test_ratio=0.2):
-    random.seed(seed)
-    np.random.seed(seed)
-    rng = np.random.RandomState(seed)
-    train_parts, test_parts, skipped = [], [], []
+
+def load_ml100k(path='u.data'):
+    require_file(path)
+    df = pd.read_csv(path, sep='\t', header=None, names=['user', 'item', 'rating', 'timestamp'])
+    if not {'user', 'item', 'rating'}.issubset(df.columns):
+        raise ValueError('MovieLens schema mismatch.')
+    df = df[df['rating'] > 3][['user', 'item']]
+    return k_core_filter(df)
+
+
+def load_amazon(path='VideoGames.csv'):
+    require_file(path)
+    raw = pd.read_csv(path)
+    cols = {c.lower(): c for c in raw.columns}
+    ucol = cols.get('user_id') or cols.get('userid') or cols.get('reviewerid')
+    icol = cols.get('item_id') or cols.get('asin')
+    rcol = cols.get('rating') or cols.get('overall')
+    if not (ucol and icol and rcol):
+        raise ValueError(f'Amazon schema mismatch. Found columns: {list(raw.columns)}')
+    df = raw[[ucol, icol, rcol]].rename(columns={ucol: 'user', icol: 'item', rcol: 'rating'})
+    df = df[df['rating'] > 3][['user', 'item']]
+    return k_core_filter(df)
+
+
+def load_lastfm(path='UserTaggedArtists-timestamps.dat'):
+    require_file(path)
+    df = pd.read_csv(path, sep='\t')
+    cols = {c.lower(): c for c in df.columns}
+    ucol = cols.get('userid')
+    icol = cols.get('artistid')
+    if not (ucol and icol):
+        raise ValueError(f'LastFM schema mismatch. Found columns: {list(df.columns)}')
+    out = df[[ucol, icol]].rename(columns={ucol: 'user', icol: 'item'})
+    return k_core_filter(out)
+
+
+def user_holdout_split(df, seed=42, test_frac=0.2):
+    rng = np.random.default_rng(seed)
+    train_parts, test_parts, eval_users = [], [], []
     for user, udf in df.groupby('user', sort=False):
         n = len(udf)
-        n_test = int(np.floor(n * test_ratio))
-        if n < 2 or n_test < 1 or n - n_test < 1:
-            skipped.append(user)
+        if n < 2:
             continue
+        n_test = max(1, int(np.floor(n * test_frac)))
+        n_test = min(n_test, n - 1)
         idx = np.arange(n)
-        rng.shuffle(idx)
-        test_parts.append(udf.iloc[idx[:n_test]][['user', 'item']])
-        train_parts.append(udf.iloc[idx[n_test:]][['user', 'item']])
-    train = pd.concat(train_parts, ignore_index=True) if train_parts else pd.DataFrame(columns=['user', 'item'])
-    test = pd.concat(test_parts, ignore_index=True) if test_parts else pd.DataFrame(columns=['user', 'item'])
-    return train, test, skipped
+        test_idx = rng.choice(idx, size=n_test, replace=False)
+        mask = np.zeros(n, dtype=bool)
+        mask[test_idx] = True
+        tr, te = udf.iloc[~mask], udf.iloc[mask]
+        if len(tr) > 0 and len(te) > 0:
+            train_parts.append(tr)
+            test_parts.append(te)
+            eval_users.append(user)
+    if not train_parts or not test_parts:
+        raise ValueError('No users support the holdout protocol after preprocessing.')
+    train = pd.concat(train_parts, ignore_index=True)
+    test = pd.concat(test_parts, ignore_index=True)
+    return train, test, len(eval_users)
 
-def dcg_at_k(rels, k=10):
-    rels = np.asarray(rels, dtype=float)[:k]
-    if rels.size == 0:
-        return 0.0
-    return float((rels / np.log2(np.arange(2, rels.size + 2))).sum())
 
-def evaluate(recs, test, users, k=10):
-    truth = test.groupby('user')['item'].apply(set).to_dict()
-    ranked = recs.sort_values(['user', 'rank']).groupby('user')['item'].apply(list).to_dict()
-    ndcgs, precs, preds, gts = [], [], [], []
-    for u in users:
-        rec_items = ranked.get(u, [])[:k]
-        gt = truth.get(u, set())
-        hits = [1 if i in gt else 0 for i in rec_items]
-        precs.append(float(np.mean(hits)) if hits else 0.0)
-        ideal = [1] * min(len(gt), k)
-        ndcgs.append(dcg_at_k(hits, k) / dcg_at_k(ideal, k) if ideal else 0.0)
-        preds.append((u, rec_items))
-        gts.append((u, sorted(gt)))
-    return float(np.mean(ndcgs)), float(np.mean(precs)), preds, gts
+def build_algorithms():
+    return {
+        'ALS': Recommender.adapt(ImplicitMF()),
+        'ItemKNN': Recommender.adapt(ItemItem()),
+        'Pop': Recommender.adapt(Popular())
+    }
 
-def recommend_excluding_train(model, train, users, n=10):
-    users = list(users)
-    train_items = train.groupby('user')['item'].apply(set).to_dict()
-    all_items = pd.Index(train['item'].unique())
-    candidates = {u: list(all_items.difference(pd.Index(list(train_items.get(u, set()))))) for u in users}
-    recs = batch.recommend(model, users, n, candidates=candidates)
-    return recs.sort_values(['user', 'rank']).reset_index(drop=True)
 
-df = iterative_kcore(load_data('u.data'), k=5)
-seeds = [1, 2, 3]
-rows = []
+def _metrics_from_recs(rec_df, truth, ks):
+    by_user = rec_df.groupby('user')['item'].apply(list).to_dict() if len(rec_df) else {}
+    rows = []
+    for k in ks:
+        precs, ndcgs = [], []
+        for u, rel in truth.items():
+            ranked = by_user.get(u, [])[:k]
+            hits = sum(1 for it in ranked if it in rel)
+            precs.append(hits / k)
+            dcg = sum((1.0 / np.log2(i + 2)) for i, it in enumerate(ranked) if it in rel)
+            ideal = min(len(rel), k)
+            idcg = sum(1.0 / np.log2(i + 2) for i in range(ideal))
+            ndcgs.append(dcg / idcg if idcg > 0 else 0.0)
+        rows.append((f'Precision@{k}', 'Precision', k, float(np.mean(precs)) if precs else np.nan))
+        rows.append((f'nDCG@{k}', 'nDCG', k, float(np.mean(ndcgs)) if ndcgs else np.nan))
+    return rows, by_user
 
-for seed in seeds:
-    train, test, skipped = make_holdout(df, seed, test_ratio=0.2)
-    eval_users = sorted(set(train['user']).intersection(test['user']))
-    train = train[train['user'].isin(eval_users)].reset_index(drop=True)
-    test = test[test['user'].isin(eval_users)].reset_index(drop=True)
 
-    random.seed(seed)
-    np.random.seed(seed)
-    algo = ImplicitMF()
+def evaluate_algo(algo, train, test, ks):
     algo.fit(train)
+    users = test['user'].drop_duplicates().tolist()
+    try:
+        recs = batch.recommend(algo, users, MAX_K, candidates=None)
+    except TypeError:
+        recs = batch.recommend(algo, users, MAX_K)
+    train_items = train.groupby('user')['item'].apply(set).to_dict()
+    truth = test.groupby('user')['item'].apply(set).to_dict()
+    recs = recs[~recs.apply(lambda r: r['item'] in train_items.get(r['user'], set()), axis=1)].copy()
+    recs['rank'] = recs.groupby('user').cumcount() + 1
+    recs = recs[recs['rank'] <= MAX_K]
+    metric_rows, by_user = _metrics_from_recs(recs[['user', 'item', 'rank']], truth, ks)
+    return metric_rows, recs[['user', 'item', 'rank']], truth, by_user
 
-    recs = recommend_excluding_train(algo, train, eval_users, n=10)
-    ndcg, prec, preds, gts = evaluate(recs, test, eval_users, k=10)
 
-    rows.append({
-        'seed': seed,
-        'users_evaluated': len(eval_users),
-        'ndcg@10': ndcg,
-        'precision@10': prec,
-        'ndcg@10_mean': np.nan,
-        'ndcg@10_std': np.nan,
-        'precision@10_mean': np.nan,
-        'precision@10_std': np.nan
-    })
-    experiment_data['ml100k_implicitmf']['metrics']['val'].append({'seed': seed, 'ndcg@10': ndcg, 'precision@10': prec})
-    experiment_data['ml100k_implicitmf']['losses']['val'].append({'seed': seed, 'validation_loss': np.nan})
-    experiment_data['ml100k_implicitmf']['predictions'].append(preds)
-    experiment_data['ml100k_implicitmf']['ground_truth'].append(gts)
-    experiment_data['ml100k_implicitmf']['timestamps'].append({'seed': seed, 'skipped_users': len(skipped), 'evaluated_users': len(eval_users)})
-    print(f'Epoch {seed}: validation_loss = {np.nan:.4f}')
-    print(f'Seed {seed}: nDCG@10 = {ndcg:.6f}, Precision@10 = {prec:.6f}')
+def ci95(x):
+    x = pd.Series(x).dropna().astype(float)
+    if len(x) < 2:
+        return np.nan
+    return float(1.96 * x.std(ddof=1) / np.sqrt(len(x)))
 
-res = pd.DataFrame(rows)
-ndcg_mean = res['ndcg@10'].mean()
-ndcg_std = res['ndcg@10'].std(ddof=1)
-prec_mean = res['precision@10'].mean()
-prec_std = res['precision@10'].std(ddof=1)
-agg = pd.DataFrame([{
-    'seed': 'aggregate',
-    'users_evaluated': res['users_evaluated'].sum(),
-    'ndcg@10': np.nan,
-    'precision@10': np.nan,
-    'ndcg@10_mean': ndcg_mean,
-    'ndcg@10_std': ndcg_std,
-    'precision@10_mean': prec_mean,
-    'precision@10_std': prec_std
-}])
-out = pd.concat([res, agg], ignore_index=True)
-out_csv = os.path.join(working_dir, 'ml100k_lenskit_implicitmf_reproducibility.csv')
-out.to_csv(out_csv, index=False)
 
-print(f'Aggregated nDCG@10: mean = {ndcg_mean:.6f}, std = {ndcg_std:.6f}')
-print(f'Aggregated Precision@10: mean = {prec_mean:.6f}, std = {prec_std:.6f}')
+datasets = {}
+for name, loader, path in [
+    ('ml100k', load_ml100k, 'u.data'),
+    ('amazon_videogames', load_amazon, 'VideoGames.csv'),
+    ('lastfm', load_lastfm, 'UserTaggedArtists-timestamps.dat')
+]:
+    try:
+        datasets[name] = loader(path)
+        df = datasets[name]
+        print(f'Loaded {name}: {len(df)} interactions, {df.user.nunique()} users, {df.item.nunique()} items')
+    except Exception as e:
+        print(f'Failed loading {name}: {e}')
+        datasets[name] = pd.DataFrame(columns=['user', 'item'])
 
+long_rows = []
+run_rows = []
+for dname, df in datasets.items():
+    if df.empty:
+        continue
+    for seed in SEEDS:
+        try:
+            train, test, n_eval = user_holdout_split(df, seed=seed, test_frac=0.2)
+        except Exception as e:
+            print(f'Split failed for {dname} seed={seed}: {e}')
+            continue
+        for aname, algo in build_algorithms().items():
+            timestamp = pd.Timestamp.now().isoformat()
+            print(f'Epoch {seed}: validation_loss = {float("nan"):.4f}')
+            try:
+                metric_rows, recs, truth, by_user = evaluate_algo(algo, train, test, KS)
+                metric_map = {}
+                for metric_label, metric_name, k, score in metric_rows:
+                    long_rows.append({
+                        'dataset': dname, 'algorithm': aname, 'seed': seed,
+                        'metric_name': metric_name, 'k': k, 'score': score,
+                        'evaluation_user_count': n_eval, 'timestamp': timestamp
+                    })
+                    metric_map[metric_label] = score
+                run_rows.append({'dataset': dname, 'algorithm': aname, 'seed': seed, 'evaluation_user_count': n_eval, 'timestamp': timestamp, **metric_map})
+                experiment_data[dname]['metrics']['train'].append({'seed': seed, 'algorithm': aname, 'n_train': len(train), 'timestamp': timestamp})
+                experiment_data[dname]['metrics']['val'].append({'seed': seed, 'algorithm': aname, 'metrics': metric_map, 'evaluation_user_count': n_eval, 'timestamp': timestamp})
+                experiment_data[dname]['losses']['train'].append({'seed': seed, 'algorithm': aname, 'loss': np.nan, 'timestamp': timestamp})
+                experiment_data[dname]['losses']['val'].append({'seed': seed, 'algorithm': aname, 'loss': np.nan, 'timestamp': timestamp})
+                experiment_data[dname]['predictions'].append({'seed': seed, 'algorithm': aname, 'rows': recs.to_dict('records')})
+                experiment_data[dname]['ground_truth'].append({'seed': seed, 'algorithm': aname, 'truth': {str(k): list(v) for k, v in truth.items()}})
+                print(dname, aname, seed, {m: round(v, 4) for m, v in metric_map.items()})
+            except Exception as e:
+                print(f'Run failed for {dname} {aname} seed={seed}: {e}')
+                for metric_name in ['Precision', 'nDCG']:
+                    for k in KS:
+                        long_rows.append({
+                            'dataset': dname, 'algorithm': aname, 'seed': seed,
+                            'metric_name': metric_name, 'k': k, 'score': np.nan,
+                            'evaluation_user_count': n_eval, 'timestamp': timestamp
+                        })
+
+results_long = pd.DataFrame(long_rows)
+results_wide = pd.DataFrame(run_rows)
+results_long.to_csv(os.path.join(working_dir, 'seed_sensitivity_results_long.csv'), index=False)
+results_wide.to_csv(os.path.join(working_dir, 'seed_sensitivity_results_wide.csv'), index=False)
 np.save(os.path.join(working_dir, 'experiment_data.npy'), experiment_data, allow_pickle=True)
-np.save(os.path.join(working_dir, 'ml100k_metrics.npy'), res[['ndcg@10', 'precision@10']].to_numpy())
-np.save(os.path.join(working_dir, 'ml100k_predictions.npy'), np.array(experiment_data['ml100k_implicitmf']['predictions'], dtype=object), allow_pickle=True)
-np.save(os.path.join(working_dir, 'ml100k_ground_truth.npy'), np.array(experiment_data['ml100k_implicitmf']['ground_truth'], dtype=object), allow_pickle=True)
-np.save(os.path.join(working_dir, 'ml100k_timestamps.npy'), np.array(experiment_data['ml100k_implicitmf']['timestamps'], dtype=object), allow_pickle=True)
+np.save(os.path.join(working_dir, 'results_long_records.npy'), results_long.to_records(index=False), allow_pickle=True)
+np.save(os.path.join(working_dir, 'results_wide_records.npy'), results_wide.to_records(index=False), allow_pickle=True)
+
+summary = (results_long.groupby(['dataset', 'algorithm', 'metric_name', 'k'])['score']
+           .agg(['mean', 'std', 'min', 'max', 'count'])
+           .reset_index())
+summary['cv'] = summary['std'] / summary['mean'].replace(0, np.nan)
+summary['ci95'] = results_long.groupby(['dataset', 'algorithm', 'metric_name', 'k'])['score'].apply(ci95).values
+summary.to_csv(os.path.join(working_dir, 'metric_summary_long.csv'), index=False)
+print('\nSeed sensitivity summary:')
+print(summary.round(4))
+
+focus = summary[(summary['k'] == 10) & (summary['metric_name'].isin(['nDCG', 'Precision']))].copy()
+focus['sensitivity_rank'] = focus.groupby('metric_name')['std'].rank(ascending=False, method='min')
+focus.to_csv(os.path.join(working_dir, 'seed_sensitivity_focus_k10.csv'), index=False)
+
+analysis_lines = []
+for metric_name in ['nDCG', 'Precision']:
+    sub = focus[focus['metric_name'] == metric_name].sort_values(['std', 'cv'], ascending=False)
+    if len(sub):
+        top = sub.iloc[0]
+        low = sub.iloc[-1]
+        analysis_lines.append(
+            f"Most seed-sensitive for {metric_name}@10: {top['dataset']} / {top['algorithm']} (std={top['std']:.4f}, cv={top['cv']:.4f}); least sensitive: {low['dataset']} / {low['algorithm']} (std={low['std']:.4f}, cv={low['cv']:.4f})."
+        )
+
+counts = results_long[['dataset', 'seed', 'evaluation_user_count']].drop_duplicates().sort_values(['dataset', 'seed'])
+counts.to_csv(os.path.join(working_dir, 'evaluation_user_counts.csv'), index=False)
+print('\nEvaluation user counts per dataset/seed:')
+print(counts)
+
+print('\nShort statistical analysis:')
+for line in analysis_lines:
+    print(line)
+with open(os.path.join(working_dir, 'short_analysis.txt'), 'w') as f:
+    f.write('\n'.join(analysis_lines + ['\nEvaluation user counts:', counts.to_string(index=False)]))
+
+np.savez_compressed(
+    os.path.join(working_dir, 'plot_data.npz'),
+    results_long=results_long.to_records(index=False),
+    results_wide=results_wide.to_records(index=False),
+    summary=summary.to_records(index=False),
+    eval_counts=counts.to_records(index=False)
+)
+
+print('\nDone. Files saved to:', working_dir)
