@@ -1,0 +1,10 @@
+[amazon_videogames] 5-core: 533,133 interactions, 63,383 users, 19,020 items (2s)
+  [amazon_videogames seed=1] train=403,998 test=129,135 eval_users=63,383 | train/test overlap=0 | candidate leakage (first 200 users)=0
+Numba is using threading layer omp - consider TBB
+found 1 potential runtime problems - see https://boi.st/lkpy-perf
+    ALS                nDCG@10 rerun=0.064487 indep=0.064487 reported=0.065863 distinct_scores=633830 (673.5s)
+    ItemKNN            nDCG@10 rerun=0.001411 indep=0.001411 reported=0.001666 distinct_scores=1 (412.9s)
+    Pop                nDCG@10 rerun=0.018306 indep=0.018306 reported=0.018306 distinct_scores=17 (213.4s)
+    ItemKNN_implicit   nDCG@10 rerun=0.058472 indep=0.058472 reported=None distinct_scores=343101 (364.8s)
+
+Done. Results in C:\Users\Robin\Documents\GitHub\AutoRecLabTeam5\scripts\rerun_results.csv

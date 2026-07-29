@@ -1,0 +1,57 @@
+Reviewer score: 72/100
+is_satisfactory: False
+Node: tree-search iteration 9 of 10 (2026-05-08)
+Source: run_stdout.log line 561 -- the NodeScore record written by the reviewer.
+Note: '--' marks characters the Windows console could not encode when the log was
+written. That is defect I1, which we reported upstream.
+================================================================================================
+
+Overall, the implementation covers much of the requested pipeline and produces plausible multi-
+seed top-N results, but it misses several important experimental and LensKit-compatibility
+requirements. Fulfillment by requirement: 1) Partially/No -- imports and APIs look broadly like
+LensKit 0.14-era, but compatibility is not ensured and some interfaces/parameterization are
+questionable for exactly 0.14.4.
+2) Yes -- loads u.data, VideoGames.csv, UserTaggedArtists-timestamps.dat from working directory
+filenames.
+3) Yes -- iterative 5-core filtering implemented.
+4) Yes -- MovieLens and Amazon keep ratings >3 and binarize to user-item interactions.
+5) Yes -- Last.FM treated as implicit and duplicate user-item events collapsed.
+6) Yes -- duplicates removed before splitting.
+7) Yes -- exactly 5 distinct seeds and reused consistently.
+8) Yes -- user-based 80/20 holdout performed per seed.
+9) Mostly Yes -- training excludes held-out interactions and each user initially gets test
+positives, though post-filtering can remove all test items for some users.
+10) Yes -- evaluation users come from remaining test users only.
+11) Yes -- ALS, ItemKNN, Pop only.
+12) No -- ALS and ItemKNN are not left at standard/default settings; several hyperparameters are
+explicitly changed without necessity.
+13) No -- ALS is configured for implicit mode, but ItemKNN is not explicitly configured in an
+implicit-feedback mode as required/supported in LensKit 0.14.4.
+14) Yes -- batch.recommend used for all users together.
+15) Yes -- candidates exclude training-seen items.
+16) Yes -- top 10 generated.
+17) Yes -- Precision/nDCG at 1,5,10 computed.
+18) No -- tidy per-run table requirement not met because results_df is wide, and long_df uses
+metric strings like Precision@10 instead of separate metric and k columns.
+19) No -- summary stats do not group by separate metric and k columns; only metric strings are
+used.
+20) Yes -- CV and range across seeds reported.
+21) No -- paired t-tests are included, but the write-up/implementation overclaims by reporting
+significance-style tests on only 5 seeds without caveats.
+22) Yes -- outputs, seeds, summaries saved.
+23) No -- parser fallback exists, but validation/error handling is incomplete: no explicit
+checks for required columns in all datasets, empty post-filter datasets, empty train/test
+splits, or failed model training/evaluation.
+24) Mostly Yes -- MovieLens and Last.FM parsing are explicit; Amazon parser attempts schema
+inference, but may not robustly match the actual schema and is not fully explicit.
+25) Mostly Yes -- fixed seeds and some deterministic preprocessing are used, but there is
+unnecessary recomputation (candidate map per split okay; per-user group sampling logic is
+mixed/random in a slightly inconsistent way), and reproducibility under exact LensKit behavior
+is not fully validated.
+
+Key improvements: use verified LensKit 0.14.4 APIs only; configure ALS and ItemKNN exactly for
+implicit data under that version; keep default hyperparameters unless absolutely needed; create
+a truly tidy metrics table with separate columns metric and k; add strong validation/error
+handling for parsing, empty filtered datasets, split integrity, and model failures; make Amazon
+parsing explicit to the actual file schema; and soften/remove inferential significance claims
+with only 5 seeds.

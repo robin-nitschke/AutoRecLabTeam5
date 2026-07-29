@@ -1,0 +1,59 @@
+{
+  "run": 5,
+  "run_date": "2026-05-08",
+  "tree_search_iteration": 9,
+  "tree_search_iterations_total": 10,
+  "node_id": null,
+  "node_id_available": false,
+  "node_id_note": "No save.pkl exists for Run 5. AutoRecLab writes the tree-search state to the fixed path ./out/save.pkl (treesearch/search.py:126-129), and that file was overwritten by Run 7 on 2026-07-16. The node is therefore identified by tree-search iteration, reviewer score, its position in the log, and the SHA-256 of its code.",
+  "reviewer_score": 72,
+  "reviewer_score_max": 100,
+  "is_satisfactory": false,
+  "selection_reason": "Only node in Run 5 whose execution succeeded; all 3 draft nodes and iterations 1-8 and 10 were flagged buggy. AutoRecLab fell back to 'Found no satisfactory node; Using best node instead' (run_stdout.log:609).",
+  "log_references": {
+    "iteration_marker": "run_stdout.log:532",
+    "node_code_embedded": "run_stdout.log:556",
+    "execution_successful": "run_stdout.log:558",
+    "reviewer_score": "run_stdout.log:561",
+    "fallback_to_best_node": "run_stdout.log:609"
+  },
+  "code_sha256": "6bfc3cb04775f1bbb09a99251fdb30853f79228906aed15455a19d201f71e32c",
+  "code_sha256_note": "Computed on the file with CRLF normalised to LF and surrounding whitespace stripped. Identical to the SHA-256 of the 'code' field of the return_plan_and_code tool call embedded at run_stdout.log:556, which proves this file is the code that produced the reported numbers.",
+  "algorithms": {
+    "ALS": "ImplicitMF(features=50, iterations=15, weight=40, method='cg', use_ratings=False)",
+    "ItemKNN": "ItemItem(nnbrs=20, min_nbrs=1, min_sim=1.0e-6, center=False)",
+    "Pop": "Popular()"
+  },
+  "methodological_status": {
+    "ALS": "valid - configured for implicit feedback",
+    "Pop": "valid - no feedback-mode configuration required",
+    "ItemKNN": "INVALID - see MISCONFIGURATION below"
+  },
+  "misconfiguration": {
+    "affected": "ItemKNN on all three datasets (3 of 9 sub-experiments)",
+    "cause": "LensKit 0.14.4 ItemItem defaults to feedback='explicit', which sets aggregate='weighted-average' and use_ratings=True. The node overrides only center. Because the training frame carries no rating column, all interactions enter as unary 1.0, so the weighted average sum(1*sim)/sum(|sim|) evaluates to exactly 1.0 for every scorable item.",
+    "observed_effect": "Every recommendation receives the identical score 1.0; the ranking is pure tie-breaking and carries no similarity signal.",
+    "correct_configuration": "ItemItem(nnbrs=20, min_nbrs=1, min_sim=1.0e-6, feedback='implicit')",
+    "see": "../RERUN_REPORT.md"
+  },
+  "seeds": [1, 7, 21, 42, 84],
+  "cutoffs": [1, 5, 10],
+  "metrics": ["Precision", "nDCG"],
+  "expected_completeness": {
+    "aggregated_sub_experiments": 9,
+    "algorithm_dataset_seed_runs": 45,
+    "individual_metric_values": 270,
+    "all_present_unique_and_finite": true
+  },
+  "environment": {
+    "autoreclab_version": "Alpha (initial release, main branch)",
+    "autoreclab_upstream": "https://github.com/ISG-Siegen/AutoRecLab",
+    "fork": "https://github.com/robin-nitschke/AutoRecLabTeam5",
+    "fork_baseline_commit": "34444d3cc77127eb73075a44980056c11b566c12",
+    "fork_baseline_note": "Upstream commit the fork branched from ('chore: bump version to 1.0.0', 2026-01-30); Team 5 patches P1-P5 applied on top.",
+    "lenskit": "0.14.4",
+    "python": "3.11",
+    "os": "Windows 11",
+    "llm_backend": "gpt-5.4"
+  }
+}

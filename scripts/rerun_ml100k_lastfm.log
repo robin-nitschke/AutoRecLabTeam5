@@ -1,0 +1,56 @@
+[ml100k] 5-core: 54,413 interactions, 938 users, 1,008 items (0s)
+  [ml100k seed=1] train=43,158 test=11,255 eval_users=938 | train/test overlap=0 | candidate leakage (first 200 users)=0
+Numba is using threading layer omp - consider TBB
+found 1 potential runtime problems - see https://boi.st/lkpy-perf
+    ALS                nDCG@10 rerun=0.210608 indep=0.210608 reported=0.207318 distinct_scores=9380 (5.9s)
+    ItemKNN            nDCG@10 rerun=0.042009 indep=0.042009 reported=0.042009 distinct_scores=1 (8.3s)
+    Pop                nDCG@10 rerun=0.157711 indep=0.157711 reported=0.157711 distinct_scores=29 (0.6s)
+    ItemKNN_implicit   nDCG@10 rerun=0.255804 indep=0.255804 reported=None distinct_scores=9380 (2.8s)
+  [ml100k seed=7] train=43,158 test=11,255 eval_users=938 | train/test overlap=0 | candidate leakage (first 200 users)=0
+    ALS                nDCG@10 rerun=0.199412 indep=0.199412 reported=0.201334 distinct_scores=9380 (0.9s)
+    ItemKNN            nDCG@10 rerun=0.045067 indep=0.045067 reported=0.045067 distinct_scores=1 (2.8s)
+    Pop                nDCG@10 rerun=0.153301 indep=0.153301 reported=0.153301 distinct_scores=37 (0.6s)
+    ItemKNN_implicit   nDCG@10 rerun=0.246914 indep=0.246914 reported=None distinct_scores=9380 (2.8s)
+  [ml100k seed=21] train=43,158 test=11,255 eval_users=938 | train/test overlap=0 | candidate leakage (first 200 users)=0
+    ALS                nDCG@10 rerun=0.200110 indep=0.200110 reported=0.203834 distinct_scores=9380 (1.0s)
+    ItemKNN            nDCG@10 rerun=0.045124 indep=0.045124 reported=0.045124 distinct_scores=1 (3.1s)
+    Pop                nDCG@10 rerun=0.151507 indep=0.151507 reported=0.151507 distinct_scores=34 (0.6s)
+    ItemKNN_implicit   nDCG@10 rerun=0.249410 indep=0.249410 reported=None distinct_scores=9380 (2.6s)
+  [ml100k seed=42] train=43,158 test=11,255 eval_users=938 | train/test overlap=0 | candidate leakage (first 200 users)=0
+    ALS                nDCG@10 rerun=0.214189 indep=0.214189 reported=0.210524 distinct_scores=9380 (0.9s)
+    ItemKNN            nDCG@10 rerun=0.042849 indep=0.042849 reported=0.042849 distinct_scores=1 (3.1s)
+    Pop                nDCG@10 rerun=0.160769 indep=0.160769 reported=0.160769 distinct_scores=34 (0.7s)
+    ItemKNN_implicit   nDCG@10 rerun=0.251480 indep=0.251480 reported=None distinct_scores=9380 (2.8s)
+  [ml100k seed=84] train=43,158 test=11,255 eval_users=938 | train/test overlap=0 | candidate leakage (first 200 users)=0
+    ALS                nDCG@10 rerun=0.207197 indep=0.207197 reported=0.215969 distinct_scores=9380 (1.0s)
+    ItemKNN            nDCG@10 rerun=0.041623 indep=0.041623 reported=0.041623 distinct_scores=1 (2.9s)
+    Pop                nDCG@10 rerun=0.158149 indep=0.158149 reported=0.158149 distinct_scores=33 (0.6s)
+    ItemKNN_implicit   nDCG@10 rerun=0.256667 indep=0.256667 reported=None distinct_scores=9380 (2.7s)
+[lastfm] 5-core: 52,551 interactions, 1,090 users, 3,646 items (0s)
+  [lastfm seed=1] train=41,597 test=10,954 eval_users=1,090 | train/test overlap=0 | candidate leakage (first 200 users)=0
+    ALS                nDCG@10 rerun=0.126572 indep=0.126572 reported=0.117679 distinct_scores=10899 (1.4s)
+    ItemKNN            nDCG@10 rerun=0.003659 indep=0.003659 reported=0.003659 distinct_scores=1 (6.9s)
+    Pop                nDCG@10 rerun=0.058992 indep=0.058992 reported=0.058992 distinct_scores=24 (1.2s)
+    ItemKNN_implicit   nDCG@10 rerun=0.111536 indep=0.111536 reported=None distinct_scores=10865 (5.0s)
+  [lastfm seed=7] train=41,597 test=10,954 eval_users=1,090 | train/test overlap=0 | candidate leakage (first 200 users)=0
+    ALS                nDCG@10 rerun=0.118447 indep=0.118447 reported=0.121993 distinct_scores=10900 (1.5s)
+    ItemKNN            nDCG@10 rerun=0.005485 indep=0.005485 reported=0.005485 distinct_scores=1 (6.9s)
+    Pop                nDCG@10 rerun=0.056886 indep=0.056886 reported=0.056886 distinct_scores=23 (1.2s)
+    ItemKNN_implicit   nDCG@10 rerun=0.114390 indep=0.114390 reported=None distinct_scores=10866 (4.7s)
+  [lastfm seed=21] train=41,597 test=10,954 eval_users=1,090 | train/test overlap=0 | candidate leakage (first 200 users)=0
+    ALS                nDCG@10 rerun=0.126626 indep=0.126626 reported=0.119151 distinct_scores=10900 (1.5s)
+    ItemKNN            nDCG@10 rerun=0.004335 indep=0.004335 reported=0.004335 distinct_scores=1 (6.9s)
+    Pop                nDCG@10 rerun=0.056453 indep=0.056453 reported=0.056453 distinct_scores=23 (1.1s)
+    ItemKNN_implicit   nDCG@10 rerun=0.114876 indep=0.114876 reported=None distinct_scores=10857 (4.7s)
+  [lastfm seed=42] train=41,597 test=10,954 eval_users=1,090 | train/test overlap=0 | candidate leakage (first 200 users)=0
+    ALS                nDCG@10 rerun=0.123036 indep=0.123036 reported=0.122565 distinct_scores=10900 (1.5s)
+    ItemKNN            nDCG@10 rerun=0.005459 indep=0.005459 reported=0.005459 distinct_scores=1 (6.9s)
+    Pop                nDCG@10 rerun=0.060138 indep=0.060138 reported=0.060138 distinct_scores=25 (1.0s)
+    ItemKNN_implicit   nDCG@10 rerun=0.107836 indep=0.107836 reported=None distinct_scores=10862 (5.0s)
+  [lastfm seed=84] train=41,597 test=10,954 eval_users=1,090 | train/test overlap=0 | candidate leakage (first 200 users)=0
+    ALS                nDCG@10 rerun=0.116748 indep=0.116748 reported=0.119897 distinct_scores=10900 (1.7s)
+    ItemKNN            nDCG@10 rerun=0.003766 indep=0.003766 reported=0.003766 distinct_scores=1 (7.4s)
+    Pop                nDCG@10 rerun=0.051767 indep=0.051767 reported=0.051767 distinct_scores=26 (1.2s)
+    ItemKNN_implicit   nDCG@10 rerun=0.113984 indep=0.113984 reported=None distinct_scores=10863 (5.2s)
+
+Done. Results in C:\Users\Robin\Documents\GitHub\AutoRecLabTeam5\scripts\rerun_results.csv

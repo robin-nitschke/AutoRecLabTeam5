@@ -1,0 +1,117 @@
+{
+  "passed": true,
+  "n_passed": 13,
+  "n_failed": 0,
+  "n_skipped": 0,
+  "expected_completeness": {
+    "aggregated_sub_experiments": 9,
+    "algorithm_dataset_seed_runs": 45,
+    "individual_metric_values": 270
+  },
+  "checks": [
+    {
+      "run": "run5",
+      "check": "C1",
+      "description": "45 algorithm-dataset-seed rows present",
+      "ok": true,
+      "skipped": false,
+      "detail": "found 45"
+    },
+    {
+      "run": "run5",
+      "check": "C2",
+      "description": "every combination has exactly 5 distinct seeds",
+      "ok": true,
+      "skipped": false,
+      "detail": "min=5 max=5 over 9 combinations"
+    },
+    {
+      "run": "run5",
+      "check": "C3",
+      "description": "no missing and no duplicated combinations",
+      "ok": true,
+      "skipped": false,
+      "detail": "missing=0 unexpected=0 duplicated=0"
+    },
+    {
+      "run": "run5",
+      "check": "C4",
+      "description": "no NaN and no non-finite metric values",
+      "ok": true,
+      "skipped": false,
+      "detail": "nan=0 inf=0"
+    },
+    {
+      "run": "run5",
+      "check": "C5",
+      "description": "all metrics at all cut-offs present, 270 values in [0,1]",
+      "ok": true,
+      "skipped": false,
+      "detail": "columns=6 values=270 in_range=True"
+    },
+    {
+      "run": "run5",
+      "check": "C6",
+      "description": "recomputed means and CVs match Table 3 of the manuscript",
+      "ok": true,
+      "skipped": false,
+      "detail": "all 9 sub-experiments match"
+    },
+    {
+      "run": "run7",
+      "check": "C1",
+      "description": "45 algorithm-dataset-seed rows present",
+      "ok": true,
+      "skipped": false,
+      "detail": "found 45"
+    },
+    {
+      "run": "run7",
+      "check": "C2",
+      "description": "every combination has exactly 5 distinct seeds",
+      "ok": true,
+      "skipped": false,
+      "detail": "min=5 max=5 over 9 combinations"
+    },
+    {
+      "run": "run7",
+      "check": "C3",
+      "description": "no missing and no duplicated combinations",
+      "ok": true,
+      "skipped": false,
+      "detail": "missing=0 unexpected=0 duplicated=0"
+    },
+    {
+      "run": "run7",
+      "check": "C4",
+      "description": "no NaN and no non-finite metric values",
+      "ok": true,
+      "skipped": false,
+      "detail": "nan=0 inf=0"
+    },
+    {
+      "run": "run7",
+      "check": "C5",
+      "description": "all metrics at all cut-offs present, 270 values in [0,1]",
+      "ok": true,
+      "skipped": false,
+      "detail": "columns=6 values=270 in_range=True"
+    },
+    {
+      "run": "run5",
+      "check": "C7",
+      "description": "recomputed 5-core counts match run_manifest.json",
+      "ok": true,
+      "skipped": false,
+      "detail": "all three datasets match"
+    },
+    {
+      "run": "config",
+      "check": "C8",
+      "description": "archived ItemKNN constructor is the reported misconfiguration",
+      "ok": true,
+      "skipped": false,
+      "detail": "both nodes carry the identical constructor; it resolves to aggregate='weighted-average', use_ratings=True -- the explicit-feedback defaults, not the implicit ones"
+    }
+  ]
+}

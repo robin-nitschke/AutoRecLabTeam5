@@ -1,0 +1,84 @@
+Reviewer score: 72/100
+is_satisfactory: False
+Node: tree-search iteration 2 of 10 (2026-07-16)
+Source: run_stdout.log line 267 -- the NodeScore record written by the reviewer.
+Note: '--' marks characters the Windows console could not encode when the log was
+written. That is defect I1, which we reported upstream.
+================================================================================================
+
+Overall, the implementation captures the core experiment and runs end-to-end, but it misses
+several important requirements around exact LensKit defaults/equivalents, tidy result structure,
+reporting evaluated-user counts, validation/error handling, and robustness of the
+holdout/evaluation protocol.
+
+Requirement checklist:
+1. Use LensKit 0.14.4 and implement exactly three recommenders: ALS, ItemKNN, and Pop, with
+standard/default hyperparameters unless LensKit requires explicit equivalents. — PARTIALLY
+fulfilled / counted NOT fulfilled: exactly three algorithms are implemented, but ALS and ItemKNN
+use explicit non-default hyperparameters (e.g., features=50, iterations=15, nnbrs=20) rather
+than standard/defaults or clearly justified equivalents.
+2. Load the three raw input files from the working directory using these exact filenames: u.data
+(MovieLens100K), VideoGames.csv (Amazon Video Games), and UserTaggedArtists-timestamps.dat
+(Last.FM). — Fulfilled.
+3. Parse each dataset into a user–item interaction table with consistent user and item ID
+columns; preserve only the information needed for implicit-feedback recommendation. — Fulfilled.
+4. Apply 5-core filtering separately to each dataset so that every retained user and every
+retained item has at least 5 interactions after filtering converges. — Fulfilled.
+5. For MovieLens100K and Amazon Video Games, convert ratings to implicit interactions by keeping
+only events with rating > 3 and discarding lower ratings before or during the 5-core
+preprocessing; treat retained events as binary interactions. — Fulfilled.
+6. For Last.FM, treat observed user–artist/tag events as implicit interactions and deduplicate
+repeated user–item events so evaluation uses binary relevance. — Fulfilled.
+7. Generate exactly 5 distinct random seeds for splitting and use the same seed set across all
+datasets and algorithms. — Fulfilled.
+8. For every dataset and seed, perform a user-based 80/20 holdout split so each user contributes
+interactions to both train and test when possible; ensure the split is reproducible from the
+seed. — Fulfilled.
+9. Exclude from evaluation any users who cannot support the holdout protocol after
+preprocessing/splitting (e.g., too few interactions), and report the number of evaluated users
+per dataset/seed. — NOT fulfilled: users are effectively all kept after 5-core, but there is no
+explicit exclusion logic/reporting of evaluation-user counts in results.
+10. Train each algorithm separately on each dataset/seed training split using implicit-feedback
+data in the format expected by LensKit 0.14.4. — Fulfilled.
+11. Generate recommendations in batch for all evaluation users at once; do not use per-user
+recommendation loops. — Fulfilled.
+12. When scoring, filter out items already seen in each user’s training data so only novel
+recommendations are evaluated. — Fulfilled.
+13. Compute Precision@1, Precision@5, Precision@10 and nDCG@1, nDCG@5, nDCG@10 for every dataset
+× algorithm × seed combination using the held-out test interactions as ground truth. —
+Fulfilled.
+14. Aggregate metrics correctly across users for each run, then summarize across the 5 seeds
+with mean and variability (at minimum standard deviation; preferably also confidence intervals).
+— Fulfilled for mean/std, though no confidence intervals.
+15. Conduct a short statistical analysis quantifying split-seed sensitivity, including within-
+dataset comparisons of metric variation across seeds for each algorithm and identifying which
+algorithms/datasets are most seed-sensitive. — PARTIALLY fulfilled / counted NOT fulfilled: CV
+and t-tests are produced, but the analysis does not clearly identify the most seed-sensitive
+algorithm/dataset combinations in a concise report and paired t-tests compare algorithms rather
+than directly quantifying seed sensitivity.
+16. Organize results in a tidy tabular structure containing dataset, algorithm, seed, metric
+name, k, score, and evaluation-user count so downstream analysis is straightforward. — NOT
+fulfilled: results are stored wide (one row per run with multiple metric columns) and omit
+metric name, k, and evaluation-user count.
+17. Include basic validation and error handling for file loading, schema mismatches, empty
+datasets after filtering, and algorithms failing on sparse splits. — NOT fulfilled: minimal
+schema heuristics exist for Amazon/LastFM, but no explicit file existence checks, empty-data
+checks, or robust try/except around training failures.
+18. Ensure the code is executable end-to-end in the working environment and produces both per-
+seed results and an overall concise analysis/report aligned with the research question. —
+Fulfilled.
+
+How to improve:
+- Use LensKit 0.14.4 standard/default algorithm settings, or document the exact required
+explicit equivalents if defaults are unavailable.
+- Add explicit validation: check file existence, required columns, and whether 5-core filtering
+leaves non-empty data; fail gracefully with clear messages.
+- Make the holdout protocol explicitly exclude unsupported users if necessary and record
+evaluation_user_count for every dataset/seed.
+- Reshape outputs into a tidy long table with columns: dataset, algorithm, seed, metric_name, k,
+score, evaluation_user_count.
+- Wrap model fitting/recommendation in error handling so sparse-split or algorithm failures are
+captured without crashing the whole experiment.
+- Improve the statistical section to directly summarize seed sensitivity (e.g., per
+dataset/algorithm mean, std, CV, maybe min/max over seeds, and a short textual identification of
+the most sensitive cases).

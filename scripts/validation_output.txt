@@ -1,0 +1,25 @@
+Independent validation of the AutoRecLab Team 5 results
+expected completeness: 9 sub-experiments / 45 runs / 270 metric values
+
+=== run5: workspace\run5\working\seed_sensitivity_results.csv ===
+  [PASS] C1  45 algorithm-dataset-seed rows present  -- found 45
+  [PASS] C2  every combination has exactly 5 distinct seeds  -- min=5 max=5 over 9 combinations
+  [PASS] C3  no missing and no duplicated combinations  -- missing=0 unexpected=0 duplicated=0
+  [PASS] C4  no NaN and no non-finite metric values  -- nan=0 inf=0
+  [PASS] C5  all metrics at all cut-offs present, 270 values in [0,1]  -- columns=6 values=270 in_range=True
+  [PASS] C6  recomputed means and CVs match Table 3 of the manuscript  -- all 9 sub-experiments match
+
+=== run7: workspace\run7\working\seed_sensitivity_results.csv ===
+  [PASS] C1  45 algorithm-dataset-seed rows present  -- found 45
+  [PASS] C2  every combination has exactly 5 distinct seeds  -- min=5 max=5 over 9 combinations
+  [PASS] C3  no missing and no duplicated combinations  -- missing=0 unexpected=0 duplicated=0
+  [PASS] C4  no NaN and no non-finite metric values  -- nan=0 inf=0
+  [PASS] C5  all metrics at all cut-offs present, 270 values in [0,1]  -- columns=6 values=270 in_range=True
+
+=== 5-core interaction counts, recomputed from the raw data ===
+  ml100k             recomputed  54,413 /    938 /  1,008   recorded  54,413 /    938 /  1,008
+  amazon_videogames  recomputed 533,133 / 63,383 / 19,020   recorded 533,133 / 63,383 / 19,020
+  lastfm             recomputed  52,551 /  1,090 /  3,646   recorded  52,551 /  1,090 /  3,646
+  [PASS] C7  recomputed 5-core counts match run_manifest.json  -- all three datasets match
+
+12 of 12 checks passed.

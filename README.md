@@ -25,12 +25,27 @@ runs. The original README follows further below.
 - Set the default model in `config.toml` to `gpt-5.4`.
 
 **Experiment artefacts** (checked in, not part of the code):
-- `out/` and `workspace/` contain the results of several runs (runs 1–7):
-  generated code, logs, `save.pkl`, CSVs, and plots.
+- **[`ARTIFACTS.md`](ARTIFACTS.md)** — maps every run to its files and says what each run is
+  evidence for. Read this first if you want to know which numbers come from where.
+- **[`REPRODUCING.md`](REPRODUCING.md)** — versions, installation, and the exact commands to verify
+  the archived results or re-execute a generated node.
+- `artifacts/run5-selected-node/` and `artifacts/run7-selected-node/` — the two tree-search nodes
+  behind the numbers reported in the paper, each with the node code, its iteration and node ID,
+  the reviewer score and full per-requirement feedback, the complete log, prompt, configuration,
+  dependency pins, per-seed results, aggregates, and statistics.
+- `artifacts/VALIDATION_REPORT.md` and `artifacts/RERUN_REPORT.md` — recorded output of our own
+  checks; `scripts/` holds the code that produces them.
+- `out/` and `workspace/` contain the raw results of all seven runs: generated code, logs,
+  `save.pkl`, CSVs, and plots.
 - Prompts used: `prompt_run5_paperreplikation.txt` (paper replication, 3 algorithms
   × 3 datasets × 5 seeds) and `prompt_run6_eigenerprompt.txt` (custom ImplicitMF run).
 - Run 7 (2026-07-16) is a repetition of run 5 with identical settings and prompt
   (`prompt_run5_paperreplikation.txt`, `gpt-5.4`, same `config.toml`).
+
+> [!NOTE]
+> **`workspace/runN/runfile.py` is not the code that produced the reported results.** It is the
+> last node the agent attempted; for runs 5 and 7 it raises a `TypeError` on algorithm construction
+> and cannot execute. Use `runfile_iter<N>_bestnode.py`, or the copies under `artifacts/`.
 
 ---
 

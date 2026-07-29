@@ -1,0 +1,59 @@
+{
+  "run": 7,
+  "run_date": "2026-07-16",
+  "tree_search_iteration": 2,
+  "tree_search_iterations_total": 10,
+  "node_id": "dac1170c438449f5a248475720dd3267",
+  "node_id_available": true,
+  "parent_draft_node_id": "9c2fbb12e3134cfa84be0336f72b80ca",
+  "node_id_note": "Recovered from save.pkl. pickle.load returns only the 3 draft root nodes because Scheduler.save() pickles self._draft_nodes (treesearch/search.py:126-129); the full 13-node tree is reachable by iterating anytree.PreOrderIter over those roots. Exactly one node has is_buggy=False, and its code is byte-identical to selected_node_code.py.",
+  "reviewer_score": 72,
+  "reviewer_score_max": 100,
+  "is_satisfactory": false,
+  "selection_reason": "Only node in Run 7 whose execution succeeded; all 3 draft nodes and iterations 1 and 3-10 were flagged buggy. AutoRecLab fell back to 'Found no satisfactory node; Using best node instead' (run_stdout.log:565).",
+  "log_references": {
+    "iteration_marker": "run_stdout.log:263",
+    "execution_successful": "run_stdout.log:264",
+    "reviewer_score": "run_stdout.log:267",
+    "fallback_to_best_node": "run_stdout.log:565"
+  },
+  "code_sha256": "92f49bf1a178736617309d72be12a7d0",
+  "code_sha256_note": "Truncated 32-hex form; computed on the file with CRLF normalised to LF. Identical to the hash of node dac1170c438449f5a248475720dd3267's code attribute in save.pkl (both 10132 characters), which proves this file is the code that produced the reported numbers.",
+  "algorithms": {
+    "ALS": "Recommender.adapt(ImplicitMF(features=50, iterations=15, reg=0.01, weight=40, method='cg'))",
+    "ItemKNN": "Recommender.adapt(ItemItem(nnbrs=20, min_nbrs=1, min_sim=1.0e-6, center=False))",
+    "Pop": "Recommender.adapt(Popular())"
+  },
+  "methodological_status": {
+    "ALS": "valid - configured for implicit feedback",
+    "Pop": "valid - no feedback-mode configuration required",
+    "ItemKNN": "INVALID - same misconfiguration as Run 5"
+  },
+  "misconfiguration": {
+    "affected": "ItemKNN on all three datasets (3 of 9 sub-experiments)",
+    "cause": "Identical to Run 5: LensKit 0.14.4 ItemItem defaults to feedback='explicit' (aggregate='weighted-average', use_ratings=True) and the node overrides only center, so all unary interactions score exactly 1.0.",
+    "correct_configuration": "ItemItem(nnbrs=20, min_nbrs=1, min_sim=1.0e-6, feedback='implicit')",
+    "see": "../RERUN_REPORT.md"
+  },
+  "seeds": [1, 7, 21, 42, 84],
+  "cutoffs": [1, 5, 10],
+  "metrics": ["Precision", "nDCG"],
+  "expected_completeness": {
+    "aggregated_sub_experiments": 9,
+    "algorithm_dataset_seed_runs": 45,
+    "individual_metric_values": 270,
+    "all_present_unique_and_finite": true
+  },
+  "relation_to_run5": "Run 7 repeats Run 5 with an identical prompt, configuration and backend model. It is a repetition of the AutoRecLab pipeline, not a re-execution of Run 5's generated code, so it does not by itself raise the evidence level of Run 5's numbers.",
+  "environment": {
+    "autoreclab_version": "Alpha (initial release, main branch)",
+    "autoreclab_upstream": "https://github.com/ISG-Siegen/AutoRecLab",
+    "fork": "https://github.com/robin-nitschke/AutoRecLabTeam5",
+    "fork_baseline_commit": "34444d3cc77127eb73075a44980056c11b566c12",
+    "fork_baseline_note": "Upstream commit the fork branched from ('chore: bump version to 1.0.0', 2026-01-30); Team 5 patches P1-P5 applied on top.",
+    "lenskit": "0.14.4",
+    "python": "3.11",
+    "os": "Windows 11",
+    "llm_backend": "gpt-5.4"
+  }
+}
