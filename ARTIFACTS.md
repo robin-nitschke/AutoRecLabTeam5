@@ -72,8 +72,10 @@ per-requirement feedback the paper quotes.
 - **Prompt:** `prompt_run6_eigenerprompt.txt` (ALS only, MovieLens 100K, 3 seeds)
 - **Selected node:** iteration 1, score 83.33/100 · **Code:** `workspace/run6/runfile_iter1_bestnode.py`
 - **Log:** `out/run6/run_stdout.log` · **Results:** `workspace/run6/working/ml100k_implicitmf_results.csv`
-- **Supports:** the small-task section. The only one of our runs that is methodologically sound
-  throughout, because a single-algorithm prompt raises no feedback-mode configuration decision.
+- **Supports:** the small-task section. The only one of our runs in which we found no
+  methodological defect, because a single-algorithm prompt raises no feedback-mode configuration
+  decision. This rests on inspection of the node code and result file (evidence level 1); the run
+  was not re-executed, and its ALS is unseeded in the same way as Run 5's.
 
 ## Runs that document development failures
 
