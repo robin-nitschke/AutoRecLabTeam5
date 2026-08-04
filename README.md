@@ -5,6 +5,12 @@ release on the `main` branch, referred to as "v1" in the original README below),
 Windows compatibility, small robustness fixes, and the artefacts from our experiment
 runs. The original README follows further below.
 
+## Paper
+
+Our paper is available in this repository as [`Paper.pdf`](Paper.pdf).
+
+DOI: [10.13140/RG.2.2.36775.10403](https://doi.org/10.13140/RG.2.2.36775.10403)
+
 ## Our Changes
 
 **Bugfixes / Windows compatibility** (in `treesearch/` and `utils/`):
